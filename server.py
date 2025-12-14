@@ -7,8 +7,9 @@ import io
 from PIL import Image
 
 app = Flask(__name__)
-
 model = YOLO("best.pt")
+model.to("cpu")
+
 OCR_CONFIG = '--psm 6 -c tessedit_char_whitelist=0123456789.,'
 
 @app.route("/predict", methods=["POST"])
@@ -31,3 +32,4 @@ def predict():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
