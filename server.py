@@ -1,19 +1,31 @@
 from flask import Flask, request, jsonify
-import cv2
-import numpy as np
-from ultralytics import YOLO
-import pytesseract
-import io
 from PIL import Image
+import io
+import os
 
 app = Flask(__name__)
-model = YOLO("best.pt")
-model.to("cpu")
 
+model = None
 OCR_CONFIG = '--psm 6 -c tessedit_char_whitelist=0123456789.,'
+
+@app.route("/")
+def health():
+    return "OK"
 
 @app.route("/predict", methods=["POST"])
 def predict():
+    global model
+
+    # imports pesados só quando precisa
+    import cv2
+    import numpy as np
+    import pytesseract
+    from ultralytics import YOLO
+
+    if model is None:
+        model = YOLO("best.pt")
+        model.to("cpu")
+
     file = request.files["image"]
     img = Image.open(io.BytesIO(file.read()))
     frame = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
@@ -31,5 +43,5 @@ def predict():
     return jsonify({"valores": valores})
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
-
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
